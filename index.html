@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>顏色判斷遊戲</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f0f0;
+    }
+    #game {
+      width: 33vw; /* 佔螢幕三分之一 */
+      height: 33vw;
+      display: grid;
+      gap: 5px;
+      background: #fff;
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      border-radius: 10px;
+    }
+    .block {
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #controls {
+      margin-top: 10px;
+      text-align: center;
+    }
+    #restartBtn {
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    #restartBtn:hover {
+      background: #1976D2;
+    }
+    #timer {
+      margin-top: 10px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <div id="game"></div>
+    <div id="controls">
+      <button id="restartBtn">重新開始遊戲</button>
+      <div id="timer">遊戲時間：0 秒</div>
+    </div>
+  </div>
+
+  <script>
+    let level = 1; // 1=初級, 2=中級, 3=高級
+    let correctCount = 0;
+    let correctIndex = null;
+    let startTime = null;
+    let timerInterval = null;
+
+    function startGame() {
+      if (!startTime) {
+        startTime = Date.now();
+        startTimer();
+      }
+
+      let size;
+      if (level === 1) size = 2;
+      else if (level === 2) size = 4;
+      else size = 8;
+
+      const game = document.getElementById("game");
+      game.innerHTML = "";
+      game.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      game.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+
+      // 隨機顏色
+      const baseColor = randomColor();
+      correctIndex = Math.floor(Math.random() * size * size);
+
+      for (let i = 0; i < size * size; i++) {
+        const block = document.createElement("div");
+        block.className = "block";
+        block.style.backgroundColor = (i === correctIndex) ? adjustColor(baseColor) : baseColor;
+        block.addEventListener("click", () => {
+          checkAnswer(i);
+        });
+        game.appendChild(block);
+      }
+    }
+
+    function randomColor() {
+      const r = Math.floor(Math.random() * 200);
+      const g = Math.floor(Math.random() * 200);
+      const b = Math.floor(Math.random() * 200);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function adjustColor(color) {
+      const rgb = color.match(/\d+/g).map(Number);
+      rgb[0] = Math.min(255, rgb[0] + 30); // 調整色差
+      return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    }
+
+    function checkAnswer(selectedIndex) {
+      if (selectedIndex === correctIndex) {
+        correctCount++;
+        if (level === 1 && correctCount > 5) {
+          level = 2;
+          correctCount = 0;
+        } else if (level === 2 && correctCount > 5) {
+          level = 3;
+          correctCount = 0;
+        } else if (level === 3 && correctCount > 6) {
+          alert("你真是高手呢!!\n遊戲時間：" + getElapsedTime() + " 秒");
+          stopTimer();
+          return;
+        }
+        startGame();
+      } else {
+        alert("你猜錯囉,請繼續努力!!\n遊戲時間：" + getElapsedTime() + " 秒");
+        stopTimer();
+      }
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        document.getElementById("timer").innerText = "遊戲時間：" + getElapsedTime() + " 秒";
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function getElapsedTime() {
+      return Math.floor((Date.now() - startTime) / 1000);
+    }
+
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      level = 1;
+      correctCount = 0;
+      startTime = Date.now();
+      stopTimer();
+      startTimer();
+      startGame();
+    });
+
+    startGame();
+  </script>
+</body>
+</html>
